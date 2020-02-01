@@ -1,4 +1,5 @@
 import random
+import ipdb
 import sys
 sys.path.append("..")  #so other modules can be found in parent dir
 from Player import *
@@ -36,18 +37,19 @@ class AIPlayer(Player):
         self.enemyId = 1 - self.playerId
 
 
-    def heuristicStepsToGoal(currentState):
-        pass
+    def heuristicStepsToGoal(self,currentState):
+        return 5
 
-    def buildNode(move,reachedState,depth=0,parentNode=None):
-        node_dict = {
+
+    def buildNode(self,move,reachedState,depth=0,parentNode=None):
+        nodeDict = {
             "move":move,
             "reachedState":reachedState,
             "depth":depth,
             "parentNode":parentNode,
-            "stateEvaluation":heuristicStepsToGoal(reachedState) + depth
+            "stateEvaluation":self.heuristicStepsToGoal(reachedState) + depth
         }
-        return node_dict
+        return nodeDict
 
     ##
     #getPlacement
@@ -57,8 +59,7 @@ class AIPlayer(Player):
     #   the player's side; 1 tunnel on player's side; 9 grass on the
     #   player's side; and 2 food on the enemy's side.
     #
-    #Parameters:
-    #   construction - the Construction to be placed.
+    #Parameters: #   construction - the Construction to be placed.
     #   currentState - the state of the game at this point in time.
     #
     #Return: The coordinates of where the construction is to be placed
@@ -113,7 +114,16 @@ class AIPlayer(Player):
     #Return: The Move to be made
     ##
     def getMove(self, currentState):
+
+        # get all the legal Moves
         moves = listAllLegalMoves(currentState)
+        moveNodes = []
+
+        #builds list of next possible move nodes
+        for move in moves:
+            moveNodes.append(self.buildNode(move,getNextState(currentState,move),0,None))
+            pass
+
 
         selectedMove = moves[random.randint(0,len(moves) - 1)];
 
@@ -121,7 +131,7 @@ class AIPlayer(Player):
         numAnts = len(currentState.inventories[currentState.whoseTurn].ants)
         while (selectedMove.moveType == BUILD and numAnts >= 3):
             selectedMove = moves[random.randint(0,len(moves) - 1)];
-            
+
         return selectedMove
 
     def getQueenMove(currentState):
