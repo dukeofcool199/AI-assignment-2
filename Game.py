@@ -1,4 +1,5 @@
 import os, re, sys, math, multiprocessing, time, random
+sys.path.insert(1,'./AI/')
 import HumanPlayer
 from Construction import *
 from Constants import *
