@@ -19,6 +19,9 @@ from AIPlayerUtils import *
 #Variables:
 #   playerId - The id of the player.
 ##
+
+
+
 class AIPlayer(Player):
 
     #__init__
@@ -30,7 +33,22 @@ class AIPlayer(Player):
     ##
     def __init__(self, inputPlayerId):
         super(AIPlayer,self).__init__(inputPlayerId, "Hussaih")
-    
+        self.enemyId = 1 - self.playerId
+
+
+    def heuristicStepsToGoal(currentState):
+        pass
+
+    def buildNode(move,reachedState,depth=0,parentNode=None):
+        node_dict = {
+            "move":move,
+            "reachedState":reachedState,
+            "depth":depth,
+            "parentNode":parentNode,
+            "stateEvaluation":heuristicStepsToGoal(reachedState) + depth
+        }
+        return node_dict
+
     ##
     #getPlacement
     #
@@ -96,6 +114,7 @@ class AIPlayer(Player):
     ##
     def getMove(self, currentState):
         moves = listAllLegalMoves(currentState)
+
         selectedMove = moves[random.randint(0,len(moves) - 1)];
 
         #don't do a build move if there are already 3+ ants
@@ -104,6 +123,21 @@ class AIPlayer(Player):
             selectedMove = moves[random.randint(0,len(moves) - 1)];
             
         return selectedMove
+
+    def getQueenMove(currentState):
+        pass
+
+    def getSoldierMove(currentState):
+        pass
+    
+    def getRSoldierMove(currentState):
+        pass
+
+    def getDronMove(currentState):
+        pass
+
+    def getWorkerMove(currentState):
+        pass
     
     ##
     #getAttack
