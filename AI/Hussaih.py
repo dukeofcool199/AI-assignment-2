@@ -88,6 +88,10 @@ class AIPlayer(Player):
         # if there is a unique node then use that one
         else:
             return bestNodes[0]
+    def printBestMove(self,bestMove):
+        print("move: {} \nreachedState: {} \ndepth: {} \nparentNode: {} \nstateEvaluation : {}\n\n".format(bestMove['move'],bestMove['reachedState'],bestMove['depth'],bestMove['parentNode'],bestMove['stateEvaluation']))
+
+
 
 
     ##
@@ -162,7 +166,9 @@ class AIPlayer(Player):
             # nodes.append(getNextState(currentState,move))
             nodes.append(self.buildNode(move,getNextState(currentState,move),0,None))
 
-        return self.bestMove(nodes)['move']
+        bestMove=self.bestMove(nodes)
+        self.printBestMove(bestMove)
+        return bestMove['move']
 
     ##
     #getAttack
