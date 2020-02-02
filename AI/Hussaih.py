@@ -37,30 +37,55 @@ class AIPlayer(Player):
     def __init__(self, inputPlayerId):
         super(AIPlayer,self).__init__(inputPlayerId, "Hussaih")
         self.enemyId = 1 - self.playerId
+        self.myFood = None
+        self.myTunnel = None
+        self.myAntHill = None
 
+
+    # def heuristicStepsToGoal(self,currentState):
+        # myInv=getCurrPlayerInventory(currentState)
+        # enemyInv=getEnemyInv(currentState)
+        # mySoldiers=getAntList(currentState,self.playerId,(SOLDIER,DRONE,R_SOLDIER))
+
+        # totalDistToQueen = 0
+        # for soldier in mySoldiers:
+            # totalDistToQueent=totalDistToQueen+approxDist(soldier.coords,enemyInv.getQueen().coords)
+        # if len(mySoldiers) == 0:
+            # avgDistToQueen=0
+        # else:
+            # avgDistToQueen=totalDistToQueen/len(mySoldiers)
+
+        # foodVal=myInv.foodCount - enemyInv.foodCount
+
+        # anthillCapture=enemyInv.getAnthill().captureHealth
+
+        # #number of attacks on average it takes to kill the queen
+        # queenHealthVal=(10/3)
+
+        # return avgDistToQueen+foodVal+anthillCapture+queenHealthVal
 
     def heuristicStepsToGoal(self,currentState):
+        
         myInv=getCurrPlayerInventory(currentState)
         enemyInv=getEnemyInv(currentState)
-        mySoldiers=getAntList(currentState,self.playerId,(SOLDIER,DRONE,R_SOLDIER))
+        enemyQueen=getAntList(currentState,self.enemyId,(QUEEN,))[0]
+        mySoldiers=getAntList(currentState,self.playerId,(DRONE,SOLDIER,R_SOLDIER,))
 
-        totalDistToQueen = 0
-        for soldier in mySoldiers:
-            totalDistToQueent=totalDistToQueen+approxDist(soldier.coords,enemyInv.getQueen().coords)
-        if len(mySoldiers) == 0:
-            avgDistToQueen=0
+        foodval=(stepsToReach(currentState,self.myTunnel.coords,self.myFood.coords)*(11-myInv.foodCount))/len(getAntList(currentState,self.playerId,(WORKER,)))
+
+        avgSoldierSteps=0
+        for solider in mySoldiers:
+            avgSoldierSteps = avgSoldierSteps + approxDist(currentState,soldier.coords,enemyQueen)
+        if len(mySoldiers)>0:
+            avgSoldierSteps=avgSoldierSteps/len(mySoldiers)
         else:
-            avgDistToQueen=totalDistToQueen/len(mySoldiers)
+            avgSoldierSteps=100
 
-        foodVal=myInv.foodCount - enemyInv.foodCount
+        eQueenHealthVal= avgSoldierSteps-enemyQueen.health
+        
 
-        anthillCapture=enemyInv.getAnthill().captureHealth
 
-        #number of attacks on average it takes to kill the queen
-        queenHealthVal=(10/3)
-
-        return avgDistToQueen+foodVal+anthillCapture+queenHealthVal
-
+        return eQueenHealthVal
 
     def buildNode(self,move,reachedState,depth=0,parentNode=None):
         nodeDict = {
@@ -79,7 +104,7 @@ class AIPlayer(Player):
             if node['stateEvaluation'] == bestNodes[0]['stateEvaluation']:
                 bestNodes.append(node)
                 continue
-            if node['stateEvaluation'] > bestNodes[0]['stateEvaluation']:
+            if node['stateEvaluation'] < bestNodes[0]['stateEvaluation']:
                 bestNodes.clear()
                 bestNodes.append(node)
         # if there are multiple nodes with the same rating then randomly pick one
@@ -88,6 +113,7 @@ class AIPlayer(Player):
         # if there is a unique node then use that one
         else:
             return bestNodes[0]
+
     def printBestMove(self,bestMove):
         print("move: {} \nreachedState: {} \ndepth: {} \nparentNode: {} \nstateEvaluation : {}\n\n".format(bestMove['move'],bestMove['reachedState'],bestMove['depth'],bestMove['parentNode'],bestMove['stateEvaluation']))
 
@@ -157,6 +183,22 @@ class AIPlayer(Player):
     #Return: The Move to be made
     ##
     def getMove(self, currentState):
+
+        # the first time this method is called, the food and tunnel locations
+        # need to be recorded in their respective instance variables
+        if (self.myTunnel == None):
+            self.myTunnel = getConstrList(currentState, self.playerId, (TUNNEL,))[0]
+        if (self.myFood == None):
+            foods = getConstrList(currentState, None, (FOOD,))
+            self.myFood = foods[0]
+            #find the food closest to the tunnel
+            # borrowed this snippet from simple food gatherer
+            bestDistSoFar = 1000 #i.e., infinity
+            for food in foods:
+                dist = stepsToReach(currentState, self.myTunnel.coords, food.coords)
+                if (dist < bestDistSoFar):
+                    self.myFood = food
+                    bestDistSoFar = dist
 
         # get all the legal Moves
         moves = listAllLegalMoves(currentState)
