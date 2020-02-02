@@ -69,6 +69,24 @@ class AIPlayer(Player):
         }
         return nodeDict
 
+    def bestMove(nodes):
+        bestNodes = []
+        bestNodes.append[0]
+        for node in nodes[1:]:
+            if node['stateEvaluation'] == bestNode['stateEvaluation']:
+                bestNodes.append(node)
+                continue
+            if node['stateEvaluation'] > bestNode['stateEvaluation']:
+                bestNodes.clear()
+                bestNodes.append(node)
+        # if there are multiple nodes with the same rating then randomly pick one
+        if len(bestNodes) > 1:
+            return bestNodes[random.randint(0,len(bestNodes))]
+        # if there is a unique node then use that one
+        else:
+            return bestNodes[0]
+
+
     ##
     #getPlacement
     #
@@ -138,13 +156,8 @@ class AIPlayer(Player):
 
         nodes = []
         for move in moves:
+            # nodes.append(getNextState(currentState,move))
             nodes.append(self.buildNode(move,getNextState(currentState,move),0,None))
-
-        #builds list of next possible move nodes
-        for move in moves:
-            moveNodes.append(self.buildNode(move,getNextState(currentState,move),0,None))
-            pass
-
 
         selectedMove = moves[random.randint(0,len(moves) - 1)];
 
