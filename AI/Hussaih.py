@@ -40,14 +40,17 @@ class AIPlayer(Player):
 
 
     def heuristicStepsToGoal(self,currentState):
-        myInv=getCurrPlayerInventory()
-        enemyInv=getEnemyInv()
+        myInv=getCurrPlayerInventory(currentState)
+        enemyInv=getEnemyInv(currentState)
         mySoldiers=getAntList(currentState,self.playerId,(SOLDIER,DRONE,R_SOLDIER))
 
         totalDistToQueen = 0
         for soldier in mySoldiers:
-            totalDist=totalDist+approxDist(soldier.coords,enemyInv.getQueen().coords)
-        avgDistToQueen=totalDistToQueen/len(mySoldiers)
+            totalDistToQueent=totalDistToQueen+approxDist(soldier.coords,enemyInv.getQueen().coords)
+        if len(mySoldiers) == 0:
+            avgDistToQueen=0
+        else:
+            avgDistToQueen=totalDistToQueen/len(mySoldiers)
 
         foodVal=myInv.foodCount - enemyInv.foodCount
 
@@ -69,19 +72,19 @@ class AIPlayer(Player):
         }
         return nodeDict
 
-    def bestMove(nodes):
+    def bestMove(self,nodes):
         bestNodes = []
-        bestNodes.append[0]
+        bestNodes.append(nodes[0])
         for node in nodes[1:]:
-            if node['stateEvaluation'] == bestNode['stateEvaluation']:
+            if node['stateEvaluation'] == bestNodes[0]['stateEvaluation']:
                 bestNodes.append(node)
                 continue
-            if node['stateEvaluation'] > bestNode['stateEvaluation']:
+            if node['stateEvaluation'] > bestNodes[0]['stateEvaluation']:
                 bestNodes.clear()
                 bestNodes.append(node)
         # if there are multiple nodes with the same rating then randomly pick one
         if len(bestNodes) > 1:
-            return bestNodes[random.randint(0,len(bestNodes))]
+            return bestNodes[random.randint(0,len(bestNodes)-1)]
         # if there is a unique node then use that one
         else:
             return bestNodes[0]
@@ -159,30 +162,8 @@ class AIPlayer(Player):
             # nodes.append(getNextState(currentState,move))
             nodes.append(self.buildNode(move,getNextState(currentState,move),0,None))
 
-        selectedMove = moves[random.randint(0,len(moves) - 1)];
+        return self.bestMove(nodes)['move']
 
-        #don't do a build move if there are already 3+ ants
-        numAnts = len(currentState.inventories[currentState.whoseTurn].ants)
-        while (selectedMove.moveType == BUILD and numAnts >= 3):
-            selectedMove = moves[random.randint(0,len(moves) - 1)];
-
-        return selectedMove
-
-    def getQueenMove(currentState):
-        pass
-
-    def getSoldierMove(currentState):
-        pass
-    
-    def getRSoldierMove(currentState):
-        pass
-
-    def getDronMove(currentState):
-        pass
-
-    def getWorkerMove(currentState):
-        pass
-    
     ##
     #getAttack
     #Description: Gets the attack to be made from the Player
