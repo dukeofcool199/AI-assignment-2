@@ -135,7 +135,10 @@ class AIPlayer(Player):
 
         # get all the legal Moves
         moves = listAllLegalMoves(currentState)
-        moveNodes = []
+
+        nodes = []
+        for move in moves:
+            nodes.append(self.buildNode(move,getNextState(currentState,move),0,None))
 
         #builds list of next possible move nodes
         for move in moves:
