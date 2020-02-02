@@ -17,6 +17,8 @@ from AIPlayerUtils import *
 #deciding a valid move based on a given game state. This class has methods that
 #will be implemented by students in Dr. Nuxoll's AI course.
 #
+#co-authors of Hussaih variant: Jenkin Schibel, James Conn
+#
 #Variables:
 #   playerId - The id of the player.
 ##
@@ -38,7 +40,23 @@ class AIPlayer(Player):
 
 
     def heuristicStepsToGoal(self,currentState):
-        return 5
+        myInv=getCurrPlayerInventory()
+        enemyInv=getEnemyInv()
+        mySoldiers=getAntList(currentState,self.playerId,(SOLDIER,DRONE,R_SOLDIER))
+
+        totalDistToQueen = 0
+        for soldier in mySoldiers:
+            totalDist=totalDist+approxDist(soldier.coords,enemyInv.getQueen().coords)
+        avgDistToQueen=totalDistToQueen/len(mySoldiers)
+
+        foodVal=myInv.foodCount - enemyInv.foodCount
+
+        anthillCapture=enemyInv.getAnthill().captureHealth
+
+        #number of attacks on average it takes to kill the queen
+        queenHealthVal=(10/3)
+
+        return avgDistToQueen+foodVal+anthillCapture+queenHealthVal
 
 
     def buildNode(self,move,reachedState,depth=0,parentNode=None):
