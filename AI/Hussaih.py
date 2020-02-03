@@ -74,18 +74,16 @@ class AIPlayer(Player):
         foodval=(stepsToReach(currentState,self.myTunnel.coords,self.myFood.coords)*(11-myInv.foodCount))/len(getAntList(currentState,self.playerId,(WORKER,)))
 
         avgSoldierSteps=0
-        for solider in mySoldiers:
-            avgSoldierSteps = avgSoldierSteps + approxDist(currentState,soldier.coords,enemyQueen)
+        for soldier in mySoldiers:
+            avgSoldierSteps = avgSoldierSteps + approxDist(soldier.coords,enemyQueen)
         if len(mySoldiers)>0:
             avgSoldierSteps=avgSoldierSteps/len(mySoldiers)
         else:
             avgSoldierSteps=100
 
         eQueenHealthVal= avgSoldierSteps-enemyQueen.health
-        
 
-
-        return eQueenHealthVal
+        return eQueenHealthVal + foodval
 
     def buildNode(self,move,reachedState,depth=0,parentNode=None):
         nodeDict = {
