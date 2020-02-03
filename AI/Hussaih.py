@@ -231,3 +231,12 @@ class AIPlayer(Player):
     def registerWin(self, hasWon):
         #method templaste, not implemented
         pass
+
+
+# def runTests():
+    # #create the player
+    # player = AIPlayer(0)
+
+    # player.heuristicStepsToGoal()
+    # player.bestMove()
+    # player.buildNode()
