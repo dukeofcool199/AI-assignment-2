@@ -42,48 +42,42 @@ class AIPlayer(Player):
         self.myAntHill = None
 
 
-    # def heuristicStepsToGoal(self,currentState):
-        # myInv=getCurrPlayerInventory(currentState)
-        # enemyInv=getEnemyInv(currentState)
-        # mySoldiers=getAntList(currentState,self.playerId,(SOLDIER,DRONE,R_SOLDIER))
-
-        # totalDistToQueen = 0
-        # for soldier in mySoldiers:
-            # totalDistToQueent=totalDistToQueen+approxDist(soldier.coords,enemyInv.getQueen().coords)
-        # if len(mySoldiers) == 0:
-            # avgDistToQueen=0
-        # else:
-            # avgDistToQueen=totalDistToQueen/len(mySoldiers)
-
-        # foodVal=myInv.foodCount - enemyInv.foodCount
-
-        # anthillCapture=enemyInv.getAnthill().captureHealth
-
-        # #number of attacks on average it takes to kill the queen
-        # queenHealthVal=(10/3)
-
-        # return avgDistToQueen+foodVal+anthillCapture+queenHealthVal
-
     def heuristicStepsToGoal(self,currentState):
         
         myInv=getCurrPlayerInventory(currentState)
-        enemyInv=getEnemyInv(currentState)
-        enemyQueen=getAntList(currentState,self.enemyId,(QUEEN,))[0]
+        enInv=getEnemyInv(currentState)
+        enQueen=enInv.getQueen()
         mySoldiers=getAntList(currentState,self.playerId,(DRONE,SOLDIER,R_SOLDIER,))
+        myWorkers=getAntList(currentState,self.playerId,(WORKER,))
 
-        foodval=(stepsToReach(currentState,self.myTunnel.coords,self.myFood.coords)*(11-myInv.foodCount))/len(getAntList(currentState,self.playerId,(WORKER,)))
+        workerVal = -len(myWorkers)
+        soldierVal = -len(mySoldiers)
+        # get the steps to the goal based on food and worker count
+        # foodval=(stepsToReach(currentState,self.myTunnel.coords,self.myFood.coords)*(11-myInv.foodCount))
+        foodVal = 11-myInv.foodCount
 
-        avgSoldierSteps=0
+        # get the steps to goal based on soldier distance to queen/anthill and health fo queen/anthill
+        avgSoldierStepsToQueen=0
+        avgSoldierStepsToHill=0
         for soldier in mySoldiers:
-            avgSoldierSteps = avgSoldierSteps + approxDist(soldier.coords,enemyQueen)
+            if enQueen == None:
+                break
+            avgSoldierStepsToQueen=avgSoldierStepsToQueen+stepsToReach(currentState,soldier.coords,enQueen.coords)
+            avgSoldierStepsToHill=avgSoldierStepsToHill+stepsToReach(currentState,soldier.coords,enInv.getAnthill().coords)
         if len(mySoldiers)>0:
-            avgSoldierSteps=avgSoldierSteps/len(mySoldiers)
+            avgSoldierStepsToQueen=avgSoldierStepsToQueen/len(mySoldiers)
+            avgSoldierStepsToHill=avgSoldierStepsToHill/len(mySoldiers)
         else:
-            avgSoldierSteps=100
+            avgSoldierStepsToQueen=50
+            avgSoldierStepsToHill=50
 
-        eQueenHealthVal= avgSoldierSteps-enemyQueen.health
 
-        return eQueenHealthVal + foodval
+        enHillHealthVal=avgSoldierStepsToHill-enInv.getAnthill().captureHealth
+        enQueenHealthVal=avgSoldierStepsToQueen-enQueen.health
+
+
+
+        return enQueenHealthVal + foodVal + enHillHealthVal
 
     def buildNode(self,move,reachedState,depth=0,parentNode=None):
         nodeDict = {
@@ -206,6 +200,9 @@ class AIPlayer(Player):
             # nodes.append(getNextState(currentState,move))
             nodes.append(self.buildNode(move,getNextState(currentState,move),0,None))
 
+
+        if  getEnemyInv(currentState).getQueen() == None:
+            return None
         bestMove=self.bestMove(nodes)
         self.printBestMove(bestMove)
         return bestMove['move']
