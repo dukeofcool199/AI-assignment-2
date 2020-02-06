@@ -111,17 +111,6 @@ class AIPlayer(Player):
         if self.isFirstTurn:  # calc food costs
             self.firstTurn(currentState)
 
-        ## ensures the game does not continue if no moves can be made
-        movements = listAllMovementMoves(currentState)
-        builds = listAllBuildMoves(currentState)
-        moves = builds + movements
-        if len(movements) == 0:
-            moves.append(Move(END))
-
-        gameStates = map(lambda move: (getNextState(currentState, move), move), moves)
-
-        nodes = list(map(lambda stateMove: StateNode(stateMove[1], stateMove[0], 0, \
-                              self.heuristicStepsToGoal(stateMove[0]), None), gameStates))
 
         return bestMove(nodes)
 
@@ -293,14 +282,7 @@ class AIPlayer(Player):
             foodLeft += UNIT_STATS[WORKER][COST]
             workerCount = 1
 
-        # Could not get rid of three worker jams without search
-        # So this is an arbitrary penalty to punish the agent for building extra workers
-        # TODO: Remove for part 2
-        if workerCount > 1:
-            adjustment += 20
-            workerCount = 1
-
-            # Prevent queen from jamming workers
+        # Prevent queen from jamming workers
         queen = inventory.getQueen()
         adjustment += 1.0 / (approxDist(queen.coords, self.bestFoodConstr.coords) + 1) + 1.0 / (
                     approxDist(queen.coords, self.bestFood.coords) + 1)
@@ -413,7 +395,6 @@ class StateNode:
         self.cost = heuristic + depth
         self.parent = parent
 
-
 ##
 #   bestMove
 # Param: list of nodes
@@ -423,6 +404,17 @@ def bestMove(nodes):
     return move.move
 
 def expandNode(node):
+    ## ensures the game does not continue if no moves can be made
+    movements = listAllMovementMoves(node.state)
+    builds = listAllBuildMoves(node.state)
+    moves = builds + movements
+    if len(movements) == 0:
+        moves.append(Move(END))
+        return
+    gameStates = map(lambda move: (getNextState(node.state, move), move), moves)
+
+    return list(map(lambda stateMove: StateNode(stateMove[1], stateMove[0], node.depth+1, \
+                          self.heuristicStepsToGoal(stateMove[0]), node), gameStates))
 
 
 
