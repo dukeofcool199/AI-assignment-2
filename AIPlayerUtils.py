@@ -598,7 +598,7 @@ def getCurrPlayerFood(self, currentState):
 
 ##
 # Return: a reference to my enemy's inventory
-def getEnemyInv(self, currentState):
+def getEnemyInv(self,currentState):
     if (currentState.inventories[0].player == currentState.whoseTurn):
         return currentState.inventories[1]
     else:
