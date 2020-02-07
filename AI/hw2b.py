@@ -120,10 +120,12 @@ class AIPlayer(Player):
 
         bn = None
         for x in range(5):
+            if len(frontierNodes) < 1:
+                break
             bn = bestNode(frontierNodes)
             frontierNodes.remove(bn)
             expandedNodes.append(bn)
-            frontierNodes.append(self.expandNode(bn))
+            frontierNodes.extend(self.expandNode(bn))
 
         return parentMove(bn)
 
@@ -407,11 +409,11 @@ class AIPlayer(Player):
         moves = builds + movements
         if len(movements) == 0:
             moves.append(Move(END))
-            return
         gameStates = map(lambda move: (getNextState(node.state, move), move), moves)
 
-        return list(map(lambda stateMove: StateNode(stateMove[1], stateMove[0], node.depth+1, \
+        nodeList = list(map(lambda stateMove: StateNode(stateMove[1], stateMove[0], node.depth+1, \
                               self.heuristicStepsToGoal(stateMove[0]), node), gameStates))
+        return nodeList
 
 class StateNode:
     def __init__(self, move, state, depth, heuristic, parent):
@@ -429,7 +431,7 @@ def bestNode(nodes):
     # move = min(nodes, key=attrgetter('cost'))
     # return move
 
-    if len(nodes) < 1:
+    if len(nodes) < 2:
         return nodes[0]
     else:
         bestNode = nodes[0]
@@ -500,6 +502,9 @@ nextState2 = getNextState(basicState,workerBuild)
 
 nodeList = [StateNode(queenMove,basicState,0,testPlayer.heuristicStepsToGoal(nextState1),None)
     ,StateNode(workerBuild,basicState,0,testPlayer.heuristicStepsToGoal(nextState2),None)]
+
+testPlayer.expandNode(nodeList[0])
+testPlayer.getMove(basicState)
 
 returnedNode = bestNode(nodeList)
 if returnedNode.move.coordList != [(0,0)] or returnedNode.move.moveType != 0 or returnedNode.move.buildType != None:
