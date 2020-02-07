@@ -111,8 +111,19 @@ class AIPlayer(Player):
         if self.isFirstTurn:  # calc food costs
             self.firstTurn(currentState)
 
+        frontierNodes = []
+        expandedNodes = []
 
-        return bestMove(nodes)
+        frontierNodes.append(StateNode(None,currentState,0,0,None))
+
+        bn = None
+        for x in range(5):
+            bn = bestMove(frontierNodes)
+            frontierNodes.remove(bn)
+            expandedNodes.append(bn)
+            frontierNodes.append(self.expandNode(bn))
+
+        return parentMove(bn)
 
         # selectedMove = moves[random.randint(0, len(moves) - 1)];
         #
@@ -387,6 +398,19 @@ class AIPlayer(Player):
         return cost
 
 
+    def expandNode(self,node):
+        ## ensures the game does not continue if no moves can be made
+        movements = listAllMovementMoves(node.state)
+        builds = listAllBuildMoves(node.state)
+        moves = builds + movements
+        if len(movements) == 0:
+            moves.append(Move(END))
+            return
+        gameStates = map(lambda move: (getNextState(node.state, move), move), moves)
+
+        return list(map(lambda stateMove: StateNode(stateMove[1], stateMove[0], node.depth+1, \
+                              self.heuristicStepsToGoal(stateMove[0]), node), gameStates))
+
 class StateNode:
     def __init__(self, move, state, depth, heuristic, parent):
         self.move = move
@@ -400,77 +424,95 @@ class StateNode:
 # Param: list of nodes
 # returns lowest cost node
 def bestMove(nodes):
-    move = min(nodes, key=lambda node: node.cost)
-    return move.move
+    # move = min(nodes, key=lambda node: node.cost)
+    # return move
+    if len(nodes) < 1:
+        return nodes[0]
+    else:
+        bestNode = nodes[0]
+        for node in nodes[1:]:
+            if nodes.cost < bestNode.cost:
+                bestNode = node
 
-def expandNode(node):
-    ## ensures the game does not continue if no moves can be made
-    movements = listAllMovementMoves(node.state)
-    builds = listAllBuildMoves(node.state)
-    moves = builds + movements
-    if len(movements) == 0:
-        moves.append(Move(END))
-        return
-    gameStates = map(lambda move: (getNextState(node.state, move), move), moves)
-
-    return list(map(lambda stateMove: StateNode(stateMove[1], stateMove[0], node.depth+1, \
-                          self.heuristicStepsToGoal(stateMove[0]), node), gameStates))
+    return bestNode
 
 
 
-###################################################################
-#  Unit Testing
-#
-#
-#
-#
-# Initialize needed objects
-testPlayer = AIPlayer(0)
-basicState = GameState.getBasicState()
 
-foodConstr1 = Construction((3,3), FOOD)
-foodConstr2 = Construction((3,4), FOOD)
-basicState.inventories[NEUTRAL].constrs.append(foodConstr1)
-basicState.inventories[NEUTRAL].constrs.append(foodConstr2)
+  # bestNode
+# Param: list of nodes
+# returns lowest cost node
+# def bestNode(nodes):
+    # node = min(nodes, key=lambda node: node.cost)
+    # return node
 
-
-# begin testing of methods
-testPlayer.firstTurn(basicState) # test out init method
-if testPlayer.bestFood.coords != (3,3) or testPlayer.bestFoodConstr.coords != (0,0) \
-        or testPlayer.foodDist != 3.0:
-    print("Error with firstTurn Initialization, Incorrect food or food Construction")
-
-moveCost = testPlayer.movesToReach(basicState,(0,0),(0,2),WORKER)
-if moveCost != 1.0:
-    print("Error with movesToReach.  Value: " + moveCost + " Should be 1.0")
+##
+#   parentMove()
+# param(node with best move)
+# returns move of the parent node of the node that had the best score
+def parentMove(node):
+    if node.depth == 1:
+        return node.move
+    else:
+        return parentMove(node.parent)
 
 
-heuristic = testPlayer.heuristicStepsToGoal(basicState)
-if heuristic != 9.0:
-    print("Error with heuristicStepsToGoal.  Value: " + heuristic + " Should be 9.0")
-
-workerCost = testPlayer.getWorkerCost(basicState,(0,1),False)
-if workerCost != 8.0:
-    print("Error with getWorkerCost.  Value: " + workerCost + " Should be 8.0")
-
-workerPenalty = testPlayer.getWorkerPenalty(basicState,testPlayer.bestFoodConstr.coords)
-if workerPenalty != 1:
-    print("Error with workerPenalty.  Value: " + workerPenalty + " Should be 1")
 
 
-##Test bestMove return from node list
-workerBuild = Move(BUILD, [basicState.inventories[0].getAnthill().coords], WORKER)
-queenMove = Move(MOVE_ANT, [basicState.inventories[0].getQueen().coords], None)
 
-nextState1 = getNextState(basicState,queenMove)
-nextState2 = getNextState(basicState,workerBuild)
+# ###################################################################
+# #  Unit Testing
+# #
+# #
+# #
+# #
+# # Initialize needed objects
+# testPlayer = AIPlayer(0)
+# basicState = GameState.getBasicState()
 
-nodeList = [StateNode(queenMove,basicState,0,testPlayer.heuristicStepsToGoal(nextState1),None)
-    ,StateNode(workerBuild,basicState,0,testPlayer.heuristicStepsToGoal(nextState2),None)]
+# foodConstr1 = Construction((3,3), FOOD)
+# foodConstr2 = Construction((3,4), FOOD)
+# basicState.inventories[NEUTRAL].constrs.append(foodConstr1)
+# basicState.inventories[NEUTRAL].constrs.append(foodConstr2)
 
-returnedMove = bestMove(nodeList)
-if returnedMove.coordList != [(0,0)] or returnedMove.moveType != 0 or returnedMove.buildType != None:
-    print("Error with bestMove Return")
+
+# # begin testing of methods
+# testPlayer.firstTurn(basicState) # test out init method
+# if testPlayer.bestFood.coords != (3,3) or testPlayer.bestFoodConstr.coords != (0,0) \
+        # or testPlayer.foodDist != 3.0:
+    # print("Error with firstTurn Initialization, Incorrect food or food Construction")
+
+# moveCost = testPlayer.movesToReach(basicState,(0,0),(0,2),WORKER)
+# if moveCost != 1.0:
+    # print("Error with movesToReach.  Value: " + moveCost + " Should be 1.0")
+
+
+# heuristic = testPlayer.heuristicStepsToGoal(basicState)
+# if heuristic != 9.0:
+    # print("Error with heuristicStepsToGoal.  Value: " + heuristic + " Should be 9.0")
+
+# workerCost = testPlayer.getWorkerCost(basicState,(0,1),False)
+# if workerCost != 8.0:
+    # print("Error with getWorkerCost.  Value: " + workerCost + " Should be 8.0")
+
+# workerPenalty = testPlayer.getWorkerPenalty(basicState,testPlayer.bestFoodConstr.coords)
+# if workerPenalty != 1:
+    # print("Error with workerPenalty.  Value: " + workerPenalty + " Should be 1")
+
+
+# ##Test bestMove return from node list
+# workerBuild = Move(BUILD, [basicState.inventories[0].getAnthill().coords], WORKER)
+# queenMove = Move(MOVE_ANT, [basicState.inventories[0].getQueen().coords], None)
+
+# nextState1 = getNextState(basicState,queenMove)
+# nextState2 = getNextState(basicState,workerBuild)
+
+# nodeList = [StateNode(queenMove,basicState,0,testPlayer.heuristicStepsToGoal(nextState1),None)
+    # ,StateNode(workerBuild,basicState,0,testPlayer.heuristicStepsToGoal(nextState2),None)]
+
+# returnedMove = bestMove(nodeList)
+# if returnedMove.coordList != [(0,0)] or returnedMove.moveType != 0 or returnedMove.buildType != None:
+    # print("Error with bestMove Return")
 
 
 
